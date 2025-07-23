@@ -2,6 +2,9 @@
 const socket = io(); //connection request to the server will be made
 // console.log("Server is running on port 3000");
 
+
+const userName = prompt("Enter your name:") || "Unknown"; //prompt for user name, default to "Unkonwn"
+
 //check if the browse supports geolocation
 if (navigator.geolocation){
     navigator.geolocation.watchPosition(
@@ -9,7 +12,8 @@ if (navigator.geolocation){
             const { latitude, longitude } = position.coords;
             socket.emit('send-location', {
                 latitude,
-                longitude
+                longitude,
+                name: userName  // Send name with location
             });
         },
         (error) => {
@@ -32,14 +36,23 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 const markers = {}; //to store markers for each user
 
 socket.on("receive-location", (data) => {
-    const { id, latitude, longitude } = data;
+    const { id, latitude, longitude, name } = data;
+
+    if(id===socket.id) {
+        // If it's your own location, set the view to your location
+        map.setView([latitude, longitude], 16); // Zoom in to user's location
+    }
     map.setView([latitude, longitude]);
     
     if(markers[id]){
         markers[id].setLatLng([latitude, longitude]);
+        markers[id].setTooltipContent( name || "Unknown"); //update tooltip with name
     }
     else{
-        markers[id] = L.marker([latitude, longitude]).addTo(map);
+        markers[id] = L.marker([latitude, longitude])
+            .addTo(map)
+            .bindTooltip(name || "Unknown",{permanent: true, direction: "top"})
+            .openTooltip();
     }
 });
 
