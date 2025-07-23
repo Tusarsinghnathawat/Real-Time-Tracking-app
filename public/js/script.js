@@ -42,7 +42,6 @@ socket.on("receive-location", (data) => {
         // If it's your own location, set the view to your location
         map.setView([latitude, longitude], 16); // Zoom in to user's location
     }
-    map.setView([latitude, longitude]);
     
     if(markers[id]){
         markers[id].setLatLng([latitude, longitude]);
