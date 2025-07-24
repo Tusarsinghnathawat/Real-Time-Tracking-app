@@ -1,11 +1,20 @@
 
-let currentRoom = null //it can be default also
+let currentRoom = "default-room";
+
+//initilize socket io
+const socket = io(); //connection request to the server will be made
+// console.log("Server is running on port 3000");
+
+// Join default room automatically when page loads
+socket.emit("join-room", currentRoom);
+
 document.getElementById("createRoomBtn").addEventListener("click", () => {
     const roomName = prompt("Enter room name:");
     if(roomName){
-        createRoom = roomName;
+        currentRoom = roomName;
         socket.emit("join-room", roomName);
         alert(`Room "${roomName}" created and joined!`);
+        console.log(`Switched to room: ${roomName}`);
     }
 });
 
@@ -15,13 +24,11 @@ document.getElementById("joinRoomBtn").addEventListener("click",() =>{
         currentRoom = roomName;
         socket.emit("join-room", roomName);
         alert(`Joined room "${roomName}"!`);
+        console.log(`Switched to room: ${roomName}`);
     }
 })  
 
 
-//initilize socket io
-const socket = io(); //connection request to the server will be made
-// console.log("Server is running on port 3000");
 
 const userName = prompt("Enter your name:") || "Unknown"; //prompt for user name, default to "Unkonwn"
 
@@ -42,11 +49,15 @@ if (navigator.geolocation){
     navigator.geolocation.watchPosition(
         (position) => {
             const { latitude, longitude } = position.coords;
-            socket.emit('send-location', {
-                latitude,
-                longitude,
-                name: userName  // Send name with location
-            });
+            // Fixed: Use the sendLocation function or include room info
+            if(currentRoom) {
+                socket.emit('send-location', {
+                    latitude,
+                    longitude,
+                    name: userName,  // Send name with location
+                    room: currentRoom // Include room information
+                });
+            }
         },
         (error) => {
             console.error("Error getting location:", error);
@@ -93,3 +104,5 @@ socket.on("user-disconnected", (id) => {
         delete markers[id]; //remove marker from the markers object
     }
 });
+
+console.log("Script loaded, current room:", currentRoom);
