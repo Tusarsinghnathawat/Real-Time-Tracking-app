@@ -23,15 +23,28 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 //hendeling connection request
 io.on('connection',function(socket){
+    let currentRoom = null;
+    socket.on("join-room", (roomName) => {
+        if(currentRoom){
+            socket.leave(currentRoom); // Leave the previous room if any
+        }
+        currentRoom = roomName;
+        socket.join(roomName);
+    });
+
     //backend mai location accept kerna hai
     socket.on("send-location", (data) => {
         //wapis location emit kerna hai frontend mai sab ko
-        io.emit("receive-location",{ id: socket.id, ...data}); //jo jo connected hai sab ko location jayege
-    })
+        if(data.room){
+            io.to(data.room).emit("receive-location",{ id: socket.id, ...data}); //jo jo connected hai sab ko location jayege
+        }
+    });
 
     //on dissconnect - release the marker
     socket.on('disconnect', ()=> {
-        io.emit("user-disconnected", socket.id); //emit to all users that this user has disconnected
+        if(currentRoom){
+            io.to(currentRoom).emit("user-disconnected", socket.id); //emit to all users that this user has disconnected
+        }
     })
     console.log("New connection established");
 })

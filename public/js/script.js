@@ -1,9 +1,41 @@
+
+let currentRoom = null //it can be default also
+document.getElementById("createRoomBtn").addEventListener("click", () => {
+    const roomName = prompt("Enter room name:");
+    if(roomName){
+        createRoom = roomName;
+        socket.emit("join-room", roomName);
+        alert(`Room "${roomName}" created and joined!`);
+    }
+});
+
+document.getElementById("joinRoomBtn").addEventListener("click",() =>{
+    const roomName = prompt("Enter room name to join:");
+    if(roomName){
+        currentRoom = roomName;
+        socket.emit("join-room", roomName);
+        alert(`Joined room "${roomName}"!`);
+    }
+})  
+
+
 //initilize socket io
 const socket = io(); //connection request to the server will be made
 // console.log("Server is running on port 3000");
 
-
 const userName = prompt("Enter your name:") || "Unknown"; //prompt for user name, default to "Unkonwn"
+
+function sendLocation(position){
+    const {latitude, longitude} = position.coords;
+    if(currentRoom){
+        socket.emit("send-location", {
+            latitude,
+            longitude,
+            name: userName, // Send name with location
+            room: currentRoom // Include room information
+        });
+    }
+}
 
 //check if the browse supports geolocation
 if (navigator.geolocation){
